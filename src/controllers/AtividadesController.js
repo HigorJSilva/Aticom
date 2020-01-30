@@ -5,11 +5,12 @@ const ObjectId = Mongoose.Types.ObjectId;
 
 module.exports ={
     async index(req, res){
-        var atividade = await  Atividade.find();
+
+        // var atividade = await  Atividade.find({aluno: req.user.sub});
+        atividade = await  Atividade.find();
         var r =JSON.parse(JSON.stringify(atividade));
         return res.json(r);
     },
-
     async store(req, res){
         const {
                 descricao,
@@ -18,13 +19,18 @@ module.exports ={
                 presencial,
                 horasCertificado,
             } = req.body;
-            
+        // const aluno = "5e2320f393c7e30de8ff5def";
+        const aluno = req.user.sub
+
         let horasConsideradas;
         horasCertificado > 40 ? horasConsideradas = 40 : horasConsideradas = horasCertificado;
 
         let erros;
+        let _id = Mongoose.Types.ObjectId();
 
-        const atividade = await  Atividade.create({
+        let atividade = await Atividade.create({
+            _id,
+            aluno,
             descricao,
             modalidade,
             referencia,
@@ -36,6 +42,7 @@ module.exports ={
                erros = err.errors
             }
         });
+        // console.log(atividade);
         // req.io.emit('post',atividade);
         if(erros){
 
@@ -45,10 +52,9 @@ module.exports ={
             });
             
         }else{
-
             return res.send({
                 success: true,
-                message: 'Atividade cadastrada'
+                message: _id
             });
         }
     },
@@ -70,9 +76,9 @@ module.exports ={
 
     let atividade = await  Atividade.findById(req.params.id);
 
-    console.log(atividade)
+    // console.log(atividade)
 
-    await  atividade.updateOne({
+    await atividade.updateOne({
         descricao,
         modalidade,
         referencia,
@@ -96,7 +102,7 @@ module.exports ={
 
         return res.send({
             success: true,
-            message: 'Atividade Alterada'
+            data: atividade
         });
     }
     },
@@ -120,10 +126,16 @@ module.exports ={
    
     },
 
+    async findByAluno(req, res){
+        var atividade = await  Atividade.find({ aluno: req.params.id});
+        return res.send(atividade);
+    },
+
     async modulos(req, res){
         var consulta = Atividade.aggregate([{
             $match: {
-                aluno: ObjectId("5d4ad48d469d2419e445ecd9"),
+                aluno: ObjectId(req.user.sub),
+                // aluno: ObjectId('5e2320f393c7e30de8ff5def'),
         
             }
         }, {

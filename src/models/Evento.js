@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const EventoSchema = mongoose.Schema({
     imagem:{
-        type: String
+        type: String, required: true
     },
     descricao:{
         type: String

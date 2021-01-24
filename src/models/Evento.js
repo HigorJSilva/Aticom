@@ -5,7 +5,8 @@ const EventoSchema = mongoose.Schema({
         type: String, required: true
     },
     descricao:{
-        type: String
+        type: String,
+        required: true
     },
     modalidade:{
         type: String,

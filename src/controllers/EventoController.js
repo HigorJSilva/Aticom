@@ -17,9 +17,15 @@ module.exports ={
                 horasCertificado,
             } = req.body;
 
+        if(descricao.length < 1 || !modalidade || !presencial || !horasCertificado || !req.file){
+            return res.send({ success: false, message:"Todos os campos precisam ser preenchidos"})
+        }
+
         let { filename: imagem } = req.file
 
-        imagem =  imagem.replace(/ /g,"_")
+       
+
+        imagem = req.user.sub + imagem.replace(/\s+/g, '_')
         let erros;
         sharp(req.file.path)
         .resize(580)
@@ -61,8 +67,8 @@ module.exports ={
     },
 
     async findOne(req, res){
-        let evento = await  Evento.findById(req.params.id);
-        return evento;
+        let evento = await  Evento.findById({_id: req.params.id});
+        return res.send(evento);
     },
     
     async update(req, res){
@@ -73,10 +79,13 @@ module.exports ={
             horasCertificado,
         } = req.body;
 
+        if(descricao.length < 1 || !modalidade || !presencial || !horasCertificado || !req.file){
+            return res.send({ success: false, message:"Todos os campos precisam ser preenchidos"})
+        }
 
         let { filename: imagem } = req.file 
 
-        imagem =  imagem.replace(/ /g,"_")
+        imagem =  imagem.replace(/\s+/g, '_')
         
         sharp(req.file.path)
         .resize(580)

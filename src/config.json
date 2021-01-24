@@ -1,3 +1,23 @@
 {
-    "secret": "ATICONUEG2020"
+    "secret": "ATICOMUEG2020",
+    "matrizes": [
+        {
+          "ano": "2015/1",
+          "cargaHoraria": "200"
+        },
+        {
+          "ano": "2019/1",
+          "cargaHoraria": "150"
+        }
+      ],
+      "email":
+        {
+          "gmailTransporter": "smtp.gmail.com",
+          "hotmailTransporter": "smtp.live.com",
+          "email":"aticomueg@gmail.com",
+          "senha":"aticom/ueg2020",
+          "corrigirAtividades":"Correções necessárias para conclusão das atividades",
+          "concluirAtividades":"Suas atividades estão em conformidade e poderão ser entregues",
+          "esqueciSenha":"Sua senha temporária do Aticom foi gerada."
+        }
 }

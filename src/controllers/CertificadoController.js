@@ -1,135 +1,149 @@
-const Certificado = require('../models/Certificado');
-const sharp = require('sharp');
+const Atividade = require('../models/Atividade');
+const User = require('../models/User')
 const path = require('path');
 const fs = require('fs');
+const { templateSettings } = require('lodash');
 
 
 module.exports ={
     async index(req, res){
 
-        certificado = await  Certificado.find();
-        var r =JSON.parse(JSON.stringify(certificado));
-        return res.json(r);
+        var alunoId = req.params.id
+        var atividades = await  Atividade.find({aluno: alunoId});
+
+        var certificados = [];
+        atividades.forEach(atividade => {
+            var id = atividade._id
+            var certificado = atividade.certificado
+            certificados.push({id, certificado});
+
+        })
+    
+        return res.json(certificados);
     },
 
     async store(req, res){
-        const {
-                aluno,
-            } = req.body;
 
-        let certificado = []
+       if(req.files.length === 0){
+			return res.send({
+				success: false,
+				message: 'Selecione os certificados'
+			});
+	   }
+	   
+       const numAtividade = await Atividade.find( { aluno: req.user.sub }).countDocuments()
 
-        req.files.forEach(element => {
-            certificado.push(element.filename.replace(/ /g,"_"));
+	   if(req.files.length !== numAtividade ){
+            fileUnlink(req)
+			return res.send({
+				success: false,
+				message: 'É necessário enviar '+numAtividade+' arquivos, você enviou '+req.files.length
+			});
+   		}
+        const aluno = req.user.sub
+        const { form } = req.body;
+        const certificados = JSON.parse(form);
 
-            sharp(element.path)
-                .toFile(
-                    path.resolve(element.destination, 'certificados', certificado[certificado.length-1] )
-                    ).then(() =>{
-                        fs.unlinkSync(element.path)
-                    } );
-        });
+	    const user = await User.findOne({_id: aluno})
 
+       await user.updateOne({
+           isPendente: true
+       })
+       
         let erros;
+        certificadoWriteFile(req)
 
-        const cert = await Certificado.create({
-            aluno,
-            certificado
+        for await (const cert of certificados) {
+           
+            var atividadeId = cert.atividadeId;
+            var certificado = aluno + cert.certificado.replace(/\s+/g, '_');
 
-        },(err) => {
-            if (err) {
-               erros = err.errors
-            }
-        });
-        // req.io.emit('post',atividade);
-        if(erros){
+           const atividade = await Atividade.updateOne({_id: atividadeId}, {
+                certificado
+            },(err) => {
+                if (err) {
+                    erros = err.errors
+                }
+            });
+          }
 
+          if(erros){
             return res.send({
                 success: false,
-                message: erros
+                erro: erros
             });
-            
-        }else{
-
-            return res.send({
-                success: true,
-                message: 'Certificados cadastrados'
-            });
-        }
-    },
-
-    async update(req, res){
-        const {
-            aluno,
-        } = req.body;
-
-    let certificado = []
-
-    req.files.forEach(element => {
-        certificado.push(element.filename.replace(/ /g,"_"));
-
-        sharp(element.path)
-            .toFile(
-                path.resolve(element.destination, 'certificados', certificado[certificado.length-1] )
-                ).then(() =>{
-                    fs.unlinkSync(element.path)
-                } );
-    });
-
-
-    let erros;
-
-    let cert = await  Certificado.findById(req.params.id);
-
-    let filepath = path.join(__dirname, '..', 'uploads', 'certificados', cert.imagem)
-
-    fs.unlinkSync(filepath);
-
-
-    await cert.updateOne({
-        aluno,
-        certificado
-        
-    },(err) => {
-        if (err) {
-           erros = err.errors
-        }
-    });
-    // req.io.emit('post',atividade);
-    if(erros){
-
-        return res.send({
-            success: false,
-            message: erros
-        });
-        
-    }else{
-
-        return res.send({
+          }
+          return res.send({
             success: true,
-            message: 'Certificados Alterados'
+            message: 'Certificados enviados'
         });
-    }
+
     },
 
     async remove(req, res){
-    
-    const certificado = await  Certificado.deleteOne({ _id: req.params.id },(err) => {
-        if (err) {
-           let erros = err.errors
-          return res.send({
-            success: false,
-            erro: erros
-          });
-        }
-    });
 
-    return res.send({
-        success: true,
-        message: 'Certificado removido'
-    });
+
+        const atividades = await Atividade.find({ aluno: req.params.id });
+
+        const user = await User.findOne({_id: req.params.id })
+
+       await user.updateOne({
+           isPendente: false
+       })
+
+        atividades.forEach(element => {
+            var filename = req.params.id + element.certificado;
+            filename = filename.replace(/\s+/g, '_');
+            let filepath = path.join(__dirname, '..', 'uploads', 'certificados', filename)
+            fs.unlinkSync(filepath);
+            
+        });
+    
+        const atividade = await  Atividade.updateMany({aluno: req.params.id }, {$unset: {certificado: '' }},(err) => {
+            if (err) {
+                let erros = err.errors
+                return res.send({
+                    success: false,
+                    erro: erros
+                });
+            }
+        });
+
+        return res.send({
+            success: true,
+            message: 'Certificados removidos'
+        });
    
     },
 
 
 }
+
+function fileUnlink(req){
+
+    req.files.forEach(element => {
+        fs.unlinkSync(element.path)
+    })
+    
+}
+
+
+function certificadoWriteFile(req) {
+    var certificado = [];
+    req.files.forEach(element => {
+
+        element.filename = req.user.sub + element.filename 
+        certificado.push(element.filename.replace(/\s+/g, '_'));
+
+        try {
+            fs.writeFileSync(path.resolve(element.destination, 'certificados', certificado[certificado.length - 1]), element, null);
+           
+        }
+        catch (e) {
+            console.log(e);
+        }
+
+    });
+    fileUnlink(req)
+}
+

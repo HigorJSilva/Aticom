@@ -12,14 +12,18 @@ const enviarEmail = require('../_helpers/EnviarEmail');
 const Modulo = require('../models/Modulo');
 
 module.exports ={
-    async index(req, res){
+    index, store, update, remove,
+    findByAluno, modulos,
+    gerarPlanilha, deletarPlanilha, notificarAluno, concluirAtividades, feedback
+};
+    async function index(req, res){
 
         var atividade = await  Atividade.find({aluno: req.user.sub});
         var r =JSON.parse(JSON.stringify(atividade));
         return res.json(r);
-    },
+    }
 
-    async store(req, res){
+    async function store(req, res){
         // console.log(req.user)
         const {
                 descricao,
@@ -72,9 +76,9 @@ module.exports ={
                 message: _id
             });
         }
-    },
+    }
 
-    async update(req, res){
+    async function update(req, res){
         const {
             descricao,
             modalidade,
@@ -123,9 +127,9 @@ module.exports ={
             data: atividade
         });
     }
-    },
+    }
 
-    async remove(req, res){
+    async function remove(req, res){
     
     const atividade = await  Atividade.deleteOne({ _id: req.params.id },(err) => {
         if (err) {
@@ -142,16 +146,16 @@ module.exports ={
         message: 'Atividade removida'
     });
    
-    },
+    }
 
-    async findByAluno(req, res){
+    async function findByAluno(req, res){
         var atividade = await  Atividade.find({ aluno: req.params.id});
         // var r =JSON.parse(JSON.stringify(atividade));
 
         return res.json(atividade);
-    },
+    }
 
-    async modulos(req, res){
+    async function modulos(req, res){
 
         var consultaHorasPorModulo = Atividade.aggregate([{
             $match: {
@@ -201,7 +205,7 @@ module.exports ={
 		'min':	(modulos.find(x=> x.nome === "Módulo 3" )).cargaHorariaMin }
 
         var cargaHorariaMatriz = (config.matrizes.find(x => x.ano === user.matriz)).cargaHoraria
-        //TODO: MUDAR PARA MODULOS PERSISTIDOS
+        
         consultaHorasPorModulo.then(function(result) {
             result.forEach(t => {
 
@@ -249,8 +253,8 @@ module.exports ={
         horasModulos.presencial = ((horasPresencial/(cargaHorariaMatriz))*100).toFixed(2);
         
         return res.send (horasModulos);
-    },
-    async gerarPlanilha(req, res,next){
+    }
+    async function gerarPlanilha(req, res,next){
 
         var atividade = await  Atividade.find({aluno: req.user.sub});
 
@@ -290,17 +294,17 @@ module.exports ={
 
 
         //  return res.json(atividade);
-    },
+    }
 
-    async deletarPlanilha(req, res,next){
+    async function deletarPlanilha(req, res,next){
         const user = await User.findById(req.user.sub)
         const nome = user.nome.replace(/\s+/g, '_');
         const filepath = path.join(__dirname, '..', 'uploads', 'planilhas', nome)+".xlsm"
 
         fs.unlinkSync(filepath);
-    },
+    }
 
-    async notificarAluno(req, res){
+    async function notificarAluno(req, res){
         let alunoId = req.params.id
         const user = await User.findById({_id:alunoId});
         const ativ = await Atividade.find({aluno: alunoId});
@@ -311,13 +315,14 @@ module.exports ={
             if(atividade.feedback)
                 atividades.push({"descricao": atividade.descricao, "feedback": atividade.feedback})
             });
+        await Atividade.updateMany({'aluno': alunoId }, {$unset: {'feedback': 1}} )
 
         // console.log('atividades :>> ', atividades);
         enviarEmail.sendMail(alunoEmail,atividades, false).catch(console.error)
         return atividades;
-    },
+    }
 
-    async concluirAtividades(req, res){
+    async function concluirAtividades(req, res){
         let alunoId = req.params.id
         const user = await User.findById({_id:alunoId});
         const alunoEmail = user.email
@@ -326,10 +331,10 @@ module.exports ={
         enviarEmail.sendMail(alunoEmail,null, true).catch(console.error)
 
         return alunoEmail
-    },
+    }
 
 
-    async feedback(req, res){
+    async function feedback(req, res){
          const {feedback} = req.body
          const atividades = await Atividade.find({aluno: req.params.id});
          
@@ -353,12 +358,9 @@ module.exports ={
                 }
              }
         });
-        console.log('req.params.id :>> ', req.params.id);
-
+        notificarAluno(req,res)
         await User.updateOne({_id: req.params.id},{isPendente: false})       
        
         return res.send(feedback)
-    },
-     
+    }
 
-}

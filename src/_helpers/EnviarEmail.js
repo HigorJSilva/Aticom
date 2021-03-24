@@ -46,11 +46,11 @@ async sendMail(alunoEmail, correcao, status) {
     html:  emailInfo.html, // html body
   });
 
-  console.log("Message sent: %s", info.messageId);
-  // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
+  // console.log("Message sent: %s", info.messageId);
+  // // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
 
-  // Preview only available when sending through an Ethereal account
-  console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+  // // Preview only available when sending through an Ethereal account
+  // console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
   // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
 },
   async esquecisenha(newSenha, alunoEmail) {
@@ -68,6 +68,8 @@ async sendMail(alunoEmail, correcao, status) {
 	let emailInfo = {}
 
 	console.log('esqueciSenha :>> ', config.email.esqueciSenha);
+	console.log('config.email.email :>> ', config.email.email);
+	console.log('config.email.senha :>> ', config.email.senha);
 
 	emailInfo.subject = config.email.esqueciSenha,
 	emailInfo.html = '<p>Sua nova senha está a baixo, você poderá usa-la para acessar o Aticom e criar uma'+

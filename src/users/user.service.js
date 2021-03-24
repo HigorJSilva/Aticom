@@ -108,7 +108,7 @@ async function alterarSenha( req ){
         return ({success: false, message: 'Senha inserida não conhecide com a senha atual'})
 
     if ( !(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,32}$/.test(novaSenha))){
-        return ({success: false, message: 'A senha precisa conter mais de 7 digitos, uma letra maiúscula e um número'})
+        return ({success: false, message: 'A senha precisa conter mais de 7 dígitos, uma letra maiúscula e um número'})
     }
     else{
         const hash = await bcrypt.hash(novaSenha, 10)

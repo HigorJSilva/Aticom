@@ -80,6 +80,16 @@ module.exports ={
 
     },
 
+    exibirCertificado(req, res){
+        fileName = req.params.id;
+        // path.resolve('../','uploads', 'certificados', fileName)
+        var data =fs.createReadStream( path.join(__dirname, '../','uploads', 'certificados', fileName));
+       
+        data.pipe(res);
+        // res.contentType("application/pdf");
+        // res.send(data);
+    },
+
     async remove(req, res){
 
 
@@ -129,21 +139,29 @@ function fileUnlink(req){
 
 
 function certificadoWriteFile(req) {
-    var certificado = [];
-    req.files.forEach(element => {
 
-        element.filename = req.user.sub + element.filename 
-        certificado.push(element.filename.replace(/\s+/g, '_'));
+    var certificado = [];
+    req.files.forEach(file => {
+        var oldpath = file.path
+        console.log('file.path :>> ', file.path);
+        console.log('oldpath :>> ', oldpath);
+        file.filename = req.user.sub + file.filename 
+        certificado.push(file.filename.replace(/\s+/g, '_'));
+        // console.log('object :>> ', path.resolve(file.destination, 'certificados', certificado[certificado.length - 1]))
+
 
         try {
-            fs.writeFileSync(path.resolve(element.destination, 'certificados', certificado[certificado.length - 1]), element, null);
-           
+            // fs.writeFileSync(path.resolve(file.destination, 'certificados', certificado[certificado.length - 1]), file, null);
+            fs.renameSync(oldpath,  path.resolve(file.destination, 'certificados', certificado[certificado.length - 1]))   
+        // element.mv( path.resolve(element.destination, 'certificados', certificado[certificado.length - 1]))
         }
         catch (e) {
             console.log(e);
         }
 
     });
-    fileUnlink(req)
+
+
+    // fileUnlink(req)
 }
 

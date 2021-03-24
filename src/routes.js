@@ -79,6 +79,7 @@ routes.post('/modulos/removeref/:id', upload.none(), authorize(Role.Admin), Modu
 
 routes.post('/avaliacao/:id', upload.none(), authorize(Role.Admin), AtividadeController.feedback)
 routes.get('/avaliacao/concluir/:id', upload.none(), authorize(Role.Admin), AtividadeController.concluirAtividades)
-routes.get('/avaliacao/corrigir/:id', upload.none(), authorize(Role.Admin), AtividadeController.notificarAluno)
+routes.post('/avaliacao/corrigir/:id', upload.none(), authorize(Role.Admin), AtividadeController.notificarAluno)
+routes.get('/exibirCertificado/:id', upload.none(), authorize(Role.Admin), CertificadoController.exibirCertificado)
 
 module.exports = routes;

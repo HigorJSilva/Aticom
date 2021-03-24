@@ -10,6 +10,11 @@
           "cargaHoraria": "150"
         }
       ],
+      "dbConection":{
+        "usuario": "aticom",
+        "senha": "aticomueg",
+        "database":"test"
+      },
       "email":
         {
           "gmailTransporter": "smtp.gmail.com",

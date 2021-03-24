@@ -6,12 +6,15 @@ const cors = require('cors');
 const path = require('path');
 const mongoose = require('mongoose');
 const errorHandler = require('./_helpers/error-handler');
-
+const config = require('./config.json')
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors());
 
-mongoose.connect('mongodb+srv://stockit:senha@cluster0-h5y5e.mongodb.net/test?retryWrites=true&w=majority',{
+
+const dbConection = config.dbConection;
+
+mongoose.connect(`mongodb+srv://${dbConection.usuario}:${dbConection.senha}@cluster0-h5y5e.mongodb.net/${dbConection.database}?retryWrites=true&w=majority`,{
     useNewUrlParser:true
 });
 

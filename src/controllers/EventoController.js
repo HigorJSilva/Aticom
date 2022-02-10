@@ -20,13 +20,15 @@ module.exports ={
         if(descricao.length < 1 || !modalidade || !presencial || !horasCertificado || !req.file){
             return res.send({ success: false, message:"Todos os campos precisam ser preenchidos"})
         }
+        
 
         let { filename: imagem } = req.file
 
-       
+      
 
         imagem = req.user.sub + imagem.replace(/\s+/g, '_')
         let erros;
+        console.log('req.file.destination :>> ', req.file.destination);
         sharp(req.file.path)
         .resize(580)
         .toFile(
@@ -66,7 +68,7 @@ module.exports ={
         }
     },
 
-    async findOne(req, res){
+    async search(req, res){
         let evento = await  Evento.findById({_id: req.params.id});
         return res.send(evento);
     },

@@ -26,7 +26,7 @@ module.exports ={
                erros = err.errors
             }
         });
-        // req.io.emit('post',atividade);
+
         if(erros){
 
             return res.send({
@@ -95,7 +95,7 @@ module.exports ={
         }
     },
 
-    async getById(req, res){
+    async search(req, res){
 
         const faq = await  FAQ.findOne({_id: req.params.id});
 

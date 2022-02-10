@@ -14,7 +14,7 @@ router.post('/authenticate', upload.none(), authenticate);
 router.post('/register', upload.none(), register);         
 
 // admin only
- router.get('/users', /*authorize(Role.Admin),*/ getAll);
+ router.get('/users', authorize(Role.Admin), getAll);
  router.get('/userPendente', authorize(Role.Admin), userPendente); 
  router.get('/getUser/:id', authorize(Role.Admin), getById); 
 
@@ -23,9 +23,6 @@ router.post('/register', upload.none(), register);
  router.post('/alterarDados', upload.none(), authorize(Role.User), alterarDados);
  router.get('/getCompleteStatus', upload.none(), authorize(Role.User), getCompleteStatus);
  router.post('/esquecisenha', upload.none(), esquecisenha);
-
-// all authenticated users
-// router.get('/e', authorize(), EventoController.index)
 
 module.exports = router;
 

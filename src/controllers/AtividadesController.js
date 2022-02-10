@@ -13,7 +13,7 @@ const Modulo = require('../models/Modulo');
 
 module.exports ={
     index, store, update, remove,
-    findByAluno, modulos,
+    search, modulos,
     gerarPlanilha, deletarPlanilha, notificarAluno, concluirAtividades, feedback
 };
     async function index(req, res){
@@ -24,7 +24,6 @@ module.exports ={
     }
 
     async function store(req, res){
-        // console.log(req.user)
         const {
                 descricao,
                 modalidade,
@@ -148,9 +147,8 @@ module.exports ={
    
     }
 
-    async function findByAluno(req, res){
-        var atividade = await  Atividade.find({ aluno: req.params.id});
-        // var r =JSON.parse(JSON.stringify(atividade));
+    async function search(req, res){
+        var atividade = await  Atividade.findById(req.params.id).where({aluno: req.user.sub});
 
         return res.json(atividade);
     }
@@ -316,8 +314,6 @@ module.exports ={
                 atividades.push({"descricao": atividade.descricao, "feedback": atividade.feedback})
             });
         await Atividade.updateMany({'aluno': alunoId }, {$unset: {'feedback': 1}} )
-
-        // console.log('atividades :>> ', atividades);
         enviarEmail.sendMail(alunoEmail,atividades, false).catch(console.error)
         return atividades;
     }
@@ -335,11 +331,10 @@ module.exports ={
 
 
     async function feedback(req, res){
-         const {feedback} = req.body
          const atividades = await Atividade.find({aluno: req.params.id});
          
-         let avaliacao = JSON.parse(feedback)
-         delete avaliacao.activeAtiv;
+         let avaliacao = req.body
+        
          var feedbacked = [];
 
          atividades.forEach(atividade => {
@@ -350,7 +345,7 @@ module.exports ={
                     Atividade.findByIdAndUpdate({_id: atividade._id},{
                         feedback
                     },{useFindAndModify: false}).then((result) =>{
-                        // return res.send({success: true})
+                        return res.send({success: true})
                     })
     
                 }catch(Exception){
@@ -359,8 +354,8 @@ module.exports ={
              }
         });
         notificarAluno(req,res)
-        await User.updateOne({_id: req.params.id},{isPendente: false})       
+        let teste = await User.updateOne({_id: req.params.id},{isPendente: false})       
        
-        return res.send(feedback)
+        return res.send(teste)
     }
 

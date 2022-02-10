@@ -62,7 +62,7 @@ module.exports ={
             }
             return res.send({
                 success: true,
-                message:  'Modulo cadastrado'
+                message:  'Modulo removido'
             });
         })
     },
@@ -100,7 +100,7 @@ module.exports ={
         }
     },
 
-    async getById(req, res){
+    async search(req, res){
 
         const modulo = await  Modulo.findOne({_id: req.params.id});
 
@@ -108,26 +108,26 @@ module.exports ={
     },
 
     async storeReferencia(req, res){
-        const {nome} = req.body;
+        const {descricao} = req.body;
 
-        const response = await Modulo.updateOne({_id: req.params.id},  { $push: { atividades: nome } },) 
+        const response = await Modulo.updateOne({_id: req.params.id},  { $push: { atividades: descricao } },) 
 
         return res.send(response)
     },
 
     async updateReferencia(req, res){
-        const {nome, oldNome} = req.body;
+        const {descricao, descricaoAntiga} = req.body;
      
-        await Modulo.updateOne( {_id: req.params.id}, { $pullAll: {atividades: [oldNome] } } )
-        const response = await Modulo.updateOne({_id: req.params.id},  { $push: { atividades: nome } },) 
+        await Modulo.updateOne( {_id: req.params.id}, { $pullAll: {atividades: [descricaoAntiga] } } )
+        const response = await Modulo.updateOne({_id: req.params.id},  { $push: { atividades: descricao } },) 
         return res.send(response)
 
     },
 
     async removeReferencia(req, res){
-        const {nome} = req.body;
+        const {descricao} = req.body;
        
-        const response = await Modulo.updateOne( {_id: req.params.id}, { $pullAll: {atividades: [nome,] } } )
+        const response = await Modulo.updateOne( {_id: req.params.id}, { $pullAll: {atividades: [descricao,] } } )
         return res.send(response)
 
     },

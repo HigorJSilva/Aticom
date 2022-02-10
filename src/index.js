@@ -19,7 +19,7 @@ mongoose.connect(`mongodb+srv://${dbConection.usuario}:${dbConection.senha}@clus
 });
 
 // api routes
-app.use('/files',express.static(path.resolve(__dirname, 'uploads')));
+app.use('/uploads',express.static(path.resolve(__dirname, 'uploads')));
 app.use(require('./routes'));
 app.use(require('./users/users.controller'));
 

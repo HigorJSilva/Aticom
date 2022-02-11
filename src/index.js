@@ -1,33 +1,8 @@
-// require('rootpath')();
-const express = require('express');
-const app = express();
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const path = require('path');
-const mongoose = require('mongoose');
-const errorHandler = require('./_helpers/error-handler');
-const config = require('./config.json')
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-app.use(cors());
+const  application = require( './application')
+const Mongoose = require ('./config/connection');
 
+new Mongoose();
 
-const dbConection = config.dbConection;
-
-mongoose.connect(`mongodb+srv://${dbConection.usuario}:${dbConection.senha}@cluster0-h5y5e.mongodb.net/${dbConection.database}?retryWrites=true&w=majority`,{
-    useNewUrlParser:true
-});
-
-// api routes
-app.use('/uploads',express.static(path.resolve(__dirname, 'uploads')));
-app.use(require('./routes'));
-app.use(require('./users/users.controller'));
-
-// global error handler
-app.use(errorHandler);
-
-// start server
-const port = process.env.NODE_ENV === 'production' ? 80 : 3333;
-const server = app.listen(port, function () {
-    console.log('Server listening on port ' + port);
-});
+application.listen(application.get('port'), () => {
+	console.log('App is running at http://localhost:%d in %s mode', application.get('port'), application.get('env'))
+})

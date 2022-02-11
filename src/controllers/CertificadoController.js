@@ -1,30 +1,30 @@
 const Atividade = require('../models/Atividade');
+
 const User = require('../models/User')
 const path = require('path');
 const fs = require('fs');
-const { templateSettings } = require('lodash');
 
 
 module.exports ={
     async index(req, res){
 
-        var alunoId = req.params.id
-        var atividades = await  Atividade.find({aluno: alunoId});
-
+        var atividades = await  Atividade.find({aluno: req.user.sub});
         var certificados = [];
+
         atividades.forEach(atividade => {
             var id = atividade._id
             var certificado = atividade.certificado
-            certificados.push({id, certificado});
-
+            if(certificado){
+                certificados.push({id, certificado});
+            }
         })
     
         return res.json(certificados);
     },
 
-    async store(req, res){
-
+    async store(req, res){       
        if(req.files.length === 0){
+     
 			return res.send({
 				success: false,
 				message: 'Selecione os certificados'
@@ -41,8 +41,8 @@ module.exports ={
 			});
    		}
         const aluno = req.user.sub
-        const { form } = req.body;
-        const certificados = JSON.parse(form);
+
+        const certificados = req.body.atividadeId
 
 	    const user = await User.findOne({_id: aluno})
 
@@ -51,12 +51,12 @@ module.exports ={
        })
        
         let erros;
-        certificadoWriteFile(req)
+        certificadoWriteFile(req, certificados)
 
         for await (const cert of certificados) {
            
             var atividadeId = cert.atividadeId;
-            var certificado = aluno + cert.certificado.replace(/\s+/g, '_');
+            var certificado = cert.certificado.replace(/\s+/g, '_');
 
            const atividade = await Atividade.updateOne({_id: atividadeId}, {
                 certificado
@@ -82,13 +82,59 @@ module.exports ={
 
     exibirCertificado(req, res){
         fileName = req.params.id;
-        // path.resolve('../','uploads', 'certificados', fileName)
         var data =fs.createReadStream( path.join(__dirname, '../','uploads', 'certificados', fileName));
        
         data.pipe(res);
-        // res.contentType("application/pdf");
-        // res.send(data);
+
     },
+
+    async search(req, res){
+
+        var certificado = await Atividade.findOne({_id: req.params.id}).where({aluno: req.user.sub});
+
+        data = fs.createReadStream( certificado.certificado);
+       
+        data.pipe(res);
+    },
+
+    async update(req, res){
+
+        const atividade = await Atividade.findOne({ _id: req.params.id }).where({aluno: req.user.sub});
+        fs.unlinkSync(atividade.certificado);
+
+        let certificados = [];
+        certificados.push(req.body.atividadeId);
+        let erros;
+
+        certificadoWriteFile(req, certificados)
+
+        for await (const cert of certificados) {
+            var atividadeId = cert.atividadeId;
+            var certificado = cert.certificado.replace(/\s+/g, '_');
+
+           const atividade = await Atividade.updateOne({_id: atividadeId}, {
+                certificado
+            },(err) => {
+                if (err) {
+                    erros = err.errors
+                }
+            });
+          }
+
+          if(erros){
+            return res.send({
+                success: false,
+                erro: erros
+            });
+          }
+          return res.send({
+            success: true,
+            message: 'Certificados enviados'
+        });
+
+
+    },
+
 
     async remove(req, res){
 
@@ -138,22 +184,20 @@ function fileUnlink(req){
 }
 
 
-function certificadoWriteFile(req) {
+function certificadoWriteFile(req, certificados) {
 
     var certificado = [];
-    req.files.forEach(file => {
+    
+    req.files.forEach((file ,index) => {
         var oldpath = file.path
-        console.log('file.path :>> ', file.path);
-        console.log('oldpath :>> ', oldpath);
         file.filename = req.user.sub + file.filename 
         certificado.push(file.filename.replace(/\s+/g, '_'));
-        // console.log('object :>> ', path.resolve(file.destination, 'certificados', certificado[certificado.length - 1]))
-
 
         try {
-            // fs.writeFileSync(path.resolve(file.destination, 'certificados', certificado[certificado.length - 1]), file, null);
-            fs.renameSync(oldpath,  path.resolve(file.destination, 'certificados', certificado[certificado.length - 1]))   
-        // element.mv( path.resolve(element.destination, 'certificados', certificado[certificado.length - 1]))
+            let newPath = path.resolve(file.destination, 'certificados', certificado[certificado.length - 1]);
+            fs.renameSync(oldpath,  newPath)  
+            certificados[index] = {"atividadeId": certificados[index], "certificado": newPath }
+           
         }
         catch (e) {
             console.log(e);
@@ -161,7 +205,5 @@ function certificadoWriteFile(req) {
 
     });
 
-
-    // fileUnlink(req)
 }
 

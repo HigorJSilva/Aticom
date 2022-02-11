@@ -2,16 +2,15 @@ const nodemailer = require("nodemailer");
 const config = require('../config.json');
 
 module.exports = {
-// async..await is not allowed in global scope, must use a wrapper
 async sendMail(alunoEmail, correcao, status) {
 
   let transporter = nodemailer.createTransport({
     host: config.email.gmailTransporter,
     port: 587,
-    secure: false, // true for 465, false for other ports
+    secure: false,
     auth: {
-      user: config.email.email, // generated ethereal user
-      pass: config.email.senha, // generated ethereal password
+      user: config.email.email,
+      pass: config.email.senha,
     },
   });
 
@@ -37,31 +36,25 @@ async sendMail(alunoEmail, correcao, status) {
      
   }
 
-  // send mail with defined transport object
   let info = await transporter.sendMail({
-    from: config.email.email, // sender address
-    to: alunoEmail, // list of receivers
-    subject: emailInfo.subject, // Subject line
-    text: emailInfo.text, // plain text body
-    html:  emailInfo.html, // html body
+    from: config.email.email,
+    to: alunoEmail,
+    subject: emailInfo.subject,
+    text: emailInfo.text,
+    html:  emailInfo.html,
   });
 
-  // console.log("Message sent: %s", info.messageId);
-  // // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
 
-  // // Preview only available when sending through an Ethereal account
-  // console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
-  // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
 },
   async esquecisenha(newSenha, alunoEmail) {
 
 		let transporter = nodemailer.createTransport({
 		host: config.email.gmailTransporter,
 		port: 587,
-		secure: false, // true for 465, false for other ports
+		secure: false,
 		auth: {
-			user: config.email.email, // generated ethereal user
-			pass: config.email.senha, // generated ethereal password
+			user: config.email.email,
+			pass: config.email.senha,
 		},
 	});
 
@@ -77,10 +70,10 @@ async sendMail(alunoEmail, correcao, status) {
 	'<h3><strong>Senha:&nbsp;'+newSenha+'</strong></h3>'
 
 	let info = await transporter.sendMail({
-		from: config.email.email, // sender address
-		to: alunoEmail, // list of receivers
-		subject: emailInfo.subject, // Subject line
-		html:  emailInfo.html, // html body
+		from: config.email.email,
+		to: alunoEmail,
+		subject: emailInfo.subject,
+		html:  emailInfo.html,
 	  });
 
 	 console.log("Message sent: %s", info.messageId);

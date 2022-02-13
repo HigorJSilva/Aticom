@@ -1,4 +1,5 @@
 const Evento = require('../models/Evento');
+const Resposta = require('../_helpers/Resposta');
 const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
@@ -6,7 +7,7 @@ const fs = require('fs');
 module.exports ={
     async index(req, res){
         var evento = await  Evento.find();
-        return res.json(evento);
+        return res.status(200).json( Resposta.send(true, null, evento, null)) 
     },
 
     async store(req, res){
@@ -18,7 +19,7 @@ module.exports ={
             } = req.body;
 
         if(descricao.length < 1 || !modalidade || !presencial || !horasCertificado || !req.file){
-            return res.send({ success: false, message:"Todos os campos precisam ser preenchidos"})
+            return res.status(422).json( Resposta.send(false, "Erro ao salvar evento", null, "Todos os campos precisam ser preenchidos"))
         }
         
 
@@ -52,25 +53,18 @@ module.exports ={
             }
         });
         // req.io.emit('post',atividade);
+        console.log('evento :>> ', evento);
         if(erros){
 
-            return res.send({
-                success: false,
-                message: erros
-            });
-            
+            return res.status(422).json( Resposta.send(false, "Erro ao salvar evento", null, erros))
         }else{
-
-            return res.send({
-                success: true,
-                message: 'Evento cadastrado'
-            });
+            return res.status(200).json( Resposta.send(true, null, evento, null))
         }
     },
 
     async search(req, res){
         let evento = await  Evento.findById({_id: req.params.id});
-        return res.send(evento);
+        return res.status(200).json( Resposta.send(true, null, evento, null))
     },
     
     async update(req, res){
@@ -82,7 +76,7 @@ module.exports ={
         } = req.body;
 
         if(descricao.length < 1 || !modalidade || !presencial || !horasCertificado || !req.file){
-            return res.send({ success: false, message:"Todos os campos precisam ser preenchidos"})
+            return res.status(422).json( Resposta.send(false, "Erro ao alterar evento", null, "Todos os campos precisam ser preenchidos"))
         }
 
         let { filename: imagem } = req.file 
@@ -97,67 +91,51 @@ module.exports ={
                 fs.unlinkSync(req.file.path)
             } );
 
-    let erros;
-   
+        let erros;
     
-   
-    let evento = await  Evento.findById(req.params.id);
+        let evento = await  Evento.findById(req.params.id);
 
-    let filepath = path.join(__dirname, '..', 'uploads', 'eventos', evento.imagem)
+        let filepath = path.join(__dirname, '..', 'uploads', 'eventos', evento.imagem)
 
-    fs.unlinkSync(filepath);
+        fs.unlinkSync(filepath);
 
-    await  evento.updateOne({
-        imagem,
-        descricao,
-        modalidade,
-        presencial,
-        horasCertificado,
-    },(err) => {
-        if (err) {
-           erros = err.errors
+        await evento.updateOne({
+            imagem,
+            descricao,
+            modalidade,
+            presencial,
+            horasCertificado,
+
+            },(err) => {
+                if (err) {
+                erros = err.errors
+                }
+            });
+
+        if(erros){
+        	return res.status(422).json( Resposta.send(false, "Erro ao alterar evento", null, erros))
+            
+        }else{
+        	return res.status(200).json( Resposta.send(true, null, null, null))
         }
-    });
-    if(erros){
-
-        return res.send({
-            success: false,
-            message: erros
-        });
-        
-    }else{
-
-        return res.send({
-            success: true,
-            message: 'Evento Alterado'
-        });
-    }
     },
 
     async remove(req, res){
     
-    const eventoImagem = await Evento.findById(req.params.id)
+		const eventoImagem = await Evento.findById(req.params.id)
 
-    const evento = await  Evento.deleteOne({ _id: req.params.id },(err) => {
-        if (err) {
-           let erros = err.errors
-          return res.send({
-            success: false,
-            erro: erros
-          });
-        }
-    });
-    
+		const evento = await  Evento.deleteOne({ _id: req.params.id },(err) => {
+			if (err) {
+				let erros = err.errors
+				return res.status(422).json( Resposta.send(false, "Erro ao remover evento", null, erros))
+			}
+		});
+		
 
-    const filepath = path.join(__dirname, '..', 'uploads', 'eventos', eventoImagem.imagem)
+		const filepath = path.join(__dirname, '..', 'uploads', 'eventos', eventoImagem.imagem)
 
-    fs.unlinkSync(filepath);
-
-    return res.send({
-        success: true,
-        message: 'Evento removido'
-    });
-   
-    },
+		fs.unlinkSync(filepath);
+		return res.status(200).json( Resposta.send(true, null, null, null))
+	},
 
 }

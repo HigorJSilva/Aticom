@@ -1,5 +1,6 @@
 const Atividade = require('../models/Atividade');
 const User = require('../models/User');
+const Resposta = require('../_helpers/Resposta');
 
 const Mongoose = require('mongoose')
 const path = require('path');
@@ -17,10 +18,15 @@ module.exports ={
     gerarPlanilha, deletarPlanilha, notificarAluno, concluirAtividades, feedback
 };
     async function index(req, res){
+        try { 
+            var atividades = await  Atividade.find({aluno: req.user.sub});
+            return res.status(200).json( Resposta.send(true, null, atividades, null));
+            
+        } catch (error) {
+            return res.status(422).json( Resposta.send(false, null, null, error));
+        }
 
-        var atividade = await  Atividade.find({aluno: req.user.sub});
-        var r =JSON.parse(JSON.stringify(atividade));
-        return res.json(r);
+       
     }
 
     async function store(req, res){
@@ -35,11 +41,11 @@ module.exports ={
         const aluno = req.user.sub
 
         if(descricao === 'undefined' || !modalidade || referencia === 'undefined' || !presencial || !horasCertificado){
-            return res.send({ success: false, message:"Todos os campos precisam ser preenchidos"})
+            return res.status(422).json( Resposta.send(false, "Todos os campos precisam ser preenchidos", null, null));
         }
     
         if(horasCertificado < 2){
-            return res.send({ success: false, message:"Não é possível adicionar atividades com menos de duas horas"})
+            return res.status(422).json( Resposta.send(false, "Não é possível adicionar atividades com menos de duas horas", null, null));
         }
 
         let horasConsideradas;
@@ -64,16 +70,10 @@ module.exports ={
         });
         if(erros){
 
-            return res.send({
-                success: false,
-                message: erros
-            });
+            return res.status(422).json(Resposta.send(false, "Erros ao cadastrar atividade", null, erros));
             
         }else{
-            return res.send({
-                success: true,
-                message: _id
-            });
+            return res.status(200).json(Resposta.send(true, null, {'id': _id}, null));
         }
     }
 
@@ -87,70 +87,66 @@ module.exports ={
         } = req.body;
 
 
-    let horasConsideradas;
-    horasCertificado > 40 ? horasConsideradas = 40 : horasConsideradas = horasCertificado;
+        let horasConsideradas;
+        horasCertificado > 40 ? horasConsideradas = 40 : horasConsideradas = horasCertificado;
 
-    if(!descricao || !modalidade || !referencia || !presencial || !horasCertificado){
-        return res.send({ success: false, message:"Todos os campos precisam ser preenchidos"})
-    }
+        if(!descricao || !modalidade || !referencia || !presencial || !horasCertificado){
+            return res.send({ success: false, message:"Todos os campos precisam ser preenchidos"})
+        }
 
-    if(horasCertificado < 2){
-        return res.send({ success: false, message:"Não é possível adicionar atividades com menos de duas horas"})
-    }
+        if(horasCertificado < 2){
+            return res.send({ success: false, message:"Não é possível adicionar atividades com menos de duas horas"})
+        }
 
-    let erros;
+        let erros;
 
-    let atividade = await  Atividade.findById(req.params.id);
+        let atividade = await  Atividade.findById(req.params.id);
 
-    await atividade.updateOne({
-        descricao,
-        modalidade,
-        referencia,
-        presencial,
-        horasCertificado,
-        horasConsideradas,
-    });
-
-
-    if(erros){
-
-        return res.send({
-            success: false,
-            message: erros
+        await atividade.updateOne({
+            descricao,
+            modalidade,
+            referencia,
+            presencial,
+            horasCertificado,
+            horasConsideradas,
         });
-        
-    }else{
 
-        return res.send({
-            success: true,
-            data: atividade
-        });
-    }
+        if(erros){
+            res.status(200).json( Resposta.send(false, "Erro ao alterar Atividade", null, erros));
+
+            return res.send({
+                success: false,
+                message: erros
+            });
+            
+        }else{
+            return res.status(200).json( Resposta.send(true, null, atividade, null));
+
+        }
     }
 
     async function remove(req, res){
     
     const atividade = await  Atividade.deleteOne({ _id: req.params.id },(err) => {
         if (err) {
-           let erros = err.errors
-          return res.send({
-            success: false,
-            erro: erros
-          });
+           return res.status(422).json( Resposta.send(false, 'Erro ao deletar atividade', null, err.errors));
+         
         }
     });
 
-    return res.send({
-        success: true,
-        message: 'Atividade removida'
-    });
+    return res.status(200).json( Resposta.send(true, null, null, null));
    
     }
 
     async function search(req, res){
-        var atividade = await  Atividade.findById(req.params.id).where({aluno: req.user.sub});
-
-        return res.json(atividade);
+        try { 
+            var atividade = await  Atividade.findById(req.params.id).where({aluno: req.user.sub});
+            return res.status(200).json( Resposta.send(true, null, atividade, null));
+            
+        } catch (error) {
+            return res.status(422).json( Resposta.send(true, "Falha ao buscar atividade", null, error));
+        }
+       
     }
 
     async function modulos(req, res){
@@ -250,7 +246,7 @@ module.exports ={
         horasModulos.total = horasModulos.modulo1+horasModulos.modulo2+horasModulos.modulo3
         horasModulos.presencial = ((horasPresencial/(cargaHorariaMatriz))*100).toFixed(2);
         
-        return res.send (horasModulos);
+        return res.status(200).json( Resposta.send(true, null, horasModulos, null));
     }
     async function gerarPlanilha(req, res,next){
 
@@ -259,7 +255,6 @@ module.exports ={
         const user = await User.findById(req.user.sub)
 
         const {matricula} = req.body
-        console.log('matricula :>> ', matricula);
 
         var letter =  String.fromCharCode(atividade.length+72)
         const range = 'A12:'+letter+(11+atividade.length)
@@ -354,8 +349,11 @@ module.exports ={
              }
         });
         notificarAluno(req,res)
-        let teste = await User.updateOne({_id: req.params.id},{isPendente: false})       
-       
-        return res.send(teste)
+        let atividadeComFeedback = await User.updateOne({_id: req.params.id},{isPendente: false})       
+
+        return atividadeComFeedback.ok 
+            ? res.status(200).json( Resposta.send(true, null, null, null))
+            : res.status(422).json( Resposta.send(true, "Erro ao salvar feedback", null, atividadeComFeedback.errors))
+      
     }
 

@@ -1,12 +1,12 @@
 const FAQ = require('../models/FAQ');
+const Resposta = require('../_helpers/Resposta');
 
 module.exports ={
     async index(req, res){
 
         const faq = await  FAQ.find();
 
-        return res.json(faq);
-        
+        return res.status(200).json( Resposta.send(true, null, faq, null))
     },
 
     async store(req, res){
@@ -28,18 +28,10 @@ module.exports ={
         });
 
         if(erros){
-
-            return res.send({
-                success: false,
-                message: erros
-            });
+            return res.status(422).json( Resposta.send(false, "Erro ao salvar ajuda", null, erros))
             
         }else{
-
-            return res.send({
-                success: true,
-                message: 'Pergunta cadastrada'
-            });
+            return res.status(200).json( Resposta.send(true, null, null, null))
         }
     },
 
@@ -49,17 +41,10 @@ module.exports ={
         const faq = await FAQ.deleteOne({_id: req.params.id},(err) => {
             if (err) {
                 let erros = err.errors
-
-                return res.send({
-                    success: false,
-                    message: erros
-                });
-
+                return res.status(422).json( Resposta.send(false, "Erro ao remover ajuda", null, erros))
             }
-            return res.send({
-                success: true,
-                message:  'Pergunta excluída'
-            });
+
+            return res.status(200).json( Resposta.send(true, null, null, null))
         })
     },
 
@@ -80,18 +65,11 @@ module.exports ={
         let erros;
 
         if(erros){
-
-            return res.send({
-                success: false,
-                message: erros
-            });
+            return res.status(422).json( Resposta.send(false, "Erro ao alterar ajuda", null, erros))
             
         }else{
-    
-            return res.send({
-                success: true,
-                message: 'Pergunta Alterada'
-            });
+
+            return res.status(200).json( Resposta.send(true, null, null, null))
         }
     },
 
@@ -99,9 +77,7 @@ module.exports ={
 
         const faq = await  FAQ.findOne({_id: req.params.id});
 
-        return res.json(faq);
+        return res.status(200).json( Resposta.send(true, null, faq, null))
     }
-
-
 
 }

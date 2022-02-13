@@ -16,12 +16,10 @@ application.use(bodyParser.json());
 application.use(cors());
 
 application.use('/files',express.static(path.resolve(__dirname, 'uploads')));
-// application.use(require('./routes'));
 application.use(require('./users/users.controller'));
 application.use(require('./routes'));
 
 
-// global error handler
 application.use(errorHandler);
 
 application.set('port', process.env.APP_PORT || 5000)

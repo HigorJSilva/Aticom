@@ -1,4 +1,5 @@
 const Atividade = require('../models/Atividade');
+const Resposta = require('../_helpers/Resposta');
 
 const User = require('../models/User')
 const path = require('path');
@@ -19,7 +20,7 @@ module.exports ={
             }
         })
     
-        return res.json(certificados);
+       return res.status(200).json( Resposta.send(true, null, certificados, null))
     },
 
     async store(req, res){       
@@ -35,10 +36,13 @@ module.exports ={
 
 	   if(req.files.length !== numAtividade ){
             fileUnlink(req)
-			return res.send({
-				success: false,
-				message: 'É necessário enviar '+numAtividade+' arquivos, você enviou '+req.files.length
-			});
+            res.status(422).json( 
+                Resposta.send(
+                    false, 
+                    "Erro ao salvar feedback", 
+                    null, 
+                    'É necessário enviar '+numAtividade+' arquivos, você enviou '+req.files.length)
+                )
    		}
         const aluno = req.user.sub
 
@@ -68,15 +72,10 @@ module.exports ={
           }
 
           if(erros){
-            return res.send({
-                success: false,
-                erro: erros
-            });
+            return res.status(422).json( Resposta.send(false, "Erro ao salvar certificado", null, erros))
           }
-          return res.send({
-            success: true,
-            message: 'Certificados enviados'
-        });
+
+          return res.status(200).json( Resposta.send(true, null, null, null))
 
     },
 
@@ -121,23 +120,15 @@ module.exports ={
             });
           }
 
-          if(erros){
-            return res.send({
-                success: false,
-                erro: erros
-            });
-          }
-          return res.send({
-            success: true,
-            message: 'Certificados enviados'
-        });
+        if(erros){
+            return res.status(422).json( Resposta.send(false, "Erro ao alterar certificado", null, erros))
+        }
 
-
+        return res.status(200).json( Resposta.send(true, null, null, null))
     },
 
 
     async remove(req, res){
-
 
         const atividades = await Atividade.find({ aluno: req.params.id });
 
@@ -158,17 +149,11 @@ module.exports ={
         const atividade = await  Atividade.updateMany({aluno: req.params.id }, {$unset: {certificado: '' }},(err) => {
             if (err) {
                 let erros = err.errors
-                return res.send({
-                    success: false,
-                    erro: erros
-                });
+                return res.status(422).json( Resposta.send(false, "Erro ao remover certificado", null, erros)) 
             }
         });
 
-        return res.send({
-            success: true,
-            message: 'Certificados removidos'
-        });
+        return res.status(200).json( Resposta.send(true, null, null, null)) 
    
     },
 

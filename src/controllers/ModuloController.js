@@ -1,12 +1,12 @@
 const Modulo = require('../models/Modulo');
+const Resposta = require('../_helpers/Resposta');
 
 module.exports ={
     async index(req, res){
 
         const modulo = await  Modulo.find();
 
-        return res.json(modulo);
-        
+        return res.status(200).json( Resposta.send(true, null, modulo, null)) 
     },
 
     async store(req, res){
@@ -33,37 +33,24 @@ module.exports ={
         // req.io.emit('post',atividade);
         if(erros){
 
-            return res.send({
-                success: false,
-                message: erros
-            });
-            
+            return res.status(422).json( Resposta.send(false, "Erro ao salvar módulo", null, erros))
         }else{
 
-            return res.send({
-                success: true,
-                message: 'Modulo cadastrado'
-            });
+            return res.status(200).json( Resposta.send(true, null, null, null)) 
         }
     },
-
 
     async remove(req, res){
 
         const modulo = await Modulo.deleteOne({_id: req.params.id},(err) => {
             if (err) {
                 let erros = err.errors
+                return res.status(422).json( Resposta.send(false, "Erro ao remover módulo", null, erros))
 
-                return res.send({
-                    success: false,
-                    message: erros
-                });
-
+            }else{
+    
+                return res.status(200).json( Resposta.send(true, null, null, null)) 
             }
-            return res.send({
-                success: true,
-                message:  'Modulo removido'
-            });
         })
     },
 
@@ -85,26 +72,18 @@ module.exports ={
         let erros;
 
         if(erros){
-
-            return res.send({
-                success: false,
-                message: erros
-            });
-            
-        }else{
-    
-            return res.send({
-                success: true,
-                message: 'Modulo Alterado'
-            });
+            return res.status(422).json( Resposta.send(false, "Erro ao alterar módulo", null, erros))
         }
+    
+        return res.status(200).json( Resposta.send(true, null, null, null)) 
+            
     },
 
     async search(req, res){
 
         const modulo = await  Modulo.findOne({_id: req.params.id});
 
-        return res.json(modulo);
+        return res.status(200).json( Resposta.send(true, null, modulo, null)) 
     },
 
     async storeReferencia(req, res){
@@ -112,7 +91,7 @@ module.exports ={
 
         const response = await Modulo.updateOne({_id: req.params.id},  { $push: { atividades: descricao } },) 
 
-        return res.send(response)
+        return res.status(200).json( Resposta.send(true, null, null, null)) 
     },
 
     async updateReferencia(req, res){
@@ -120,15 +99,14 @@ module.exports ={
      
         await Modulo.updateOne( {_id: req.params.id}, { $pullAll: {atividades: [descricaoAntiga] } } )
         const response = await Modulo.updateOne({_id: req.params.id},  { $push: { atividades: descricao } },) 
-        return res.send(response)
-
+        return res.status(200).json( Resposta.send(true, null, null, null)) 
     },
 
     async removeReferencia(req, res){
         const {descricao} = req.body;
        
         const response = await Modulo.updateOne( {_id: req.params.id}, { $pullAll: {atividades: [descricao,] } } )
-        return res.send(response)
+        return res.status(200).json( Resposta.send(true, null, null, null)) 
 
     },
 
